@@ -1,0 +1,969 @@
+/* shell.css — app chrome for mushplayer (DESIGN.md §2, §9, §10).
+ * Consumes tokens from src/styles/tokens.css; no raw colors here.
+ * Spacing/sizing follow the 4px scale (§3) and the explicit chrome
+ * sizes from §2/§9/§10. Only hairline borders (1px), focus rings (2px),
+ * and the spec'd 14px hover thumbs sit outside the scale. */
+
+:root {
+  --sidebar-w: 76px;
+  --topbar-h: 64px;
+  --player-h: 76px;
+}
+
+/* ------------------------------------------------------------------ */
+/* 2.1 App shell grid                                                 */
+/* ------------------------------------------------------------------ */
+
+.mp-shell {
+  height: 100dvh;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  grid-template-rows: var(--topbar-h) minmax(0, 1fr) var(--player-h);
+  transition: grid-template-columns var(--d-base) var(--ease-out);
+}
+
+.mp-shell--nav-open {
+  --sidebar-w: 240px;
+}
+
+.mp-shell__sidebar {
+  grid-row: 1 / 3;
+  grid-column: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.mp-shell__topbar {
+  grid-row: 1;
+  grid-column: 2;
+  min-width: 0;
+}
+
+.mp-shell__main {
+  grid-row: 2;
+  grid-column: 2;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mp-shell__player {
+  grid-row: 3;
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Shared focus / motion                                              */
+/* ------------------------------------------------------------------ */
+
+.mp-icon-btn:focus-visible,
+.mp-pill:focus-visible,
+.mp-sidebar__item:focus-visible,
+.mp-play-btn:focus-visible,
+.mp-search__input:focus-visible,
+.mp-key-field__input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.mp-slider__input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 4px;
+  border-radius: var(--r-pill);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mp-shell,
+  .mp-icon-btn,
+  .mp-pill,
+  .mp-sidebar__item,
+  .mp-play-btn,
+  .mp-search,
+  .mp-sidebar {
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* IconButton                                                         */
+/* ------------------------------------------------------------------ */
+
+.mp-icon-btn {
+  --mp-icon-size: 20px;
+  min-width: 40px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-1);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition:
+    transform var(--d-fast) var(--ease-out),
+    background-color var(--d-fast) var(--ease-out),
+    color var(--d-fast) var(--ease-out),
+    opacity var(--d-fast) var(--ease-out);
+}
+
+.mp-icon-btn svg {
+  width: var(--mp-icon-size);
+  height: var(--mp-icon-size);
+  flex: none;
+}
+
+.mp-icon-btn:hover {
+  background-color: var(--surface-2);
+  color: var(--text-1);
+  transform: scale(1.06);
+}
+
+.mp-icon-btn:active {
+  transform: scale(0.96);
+  background-color: var(--surface-3);
+}
+
+.mp-icon-btn--active {
+  color: var(--text-1);
+  background-color: var(--surface-2);
+}
+
+.mp-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+  background-color: transparent;
+}
+
+/* ------------------------------------------------------------------ */
+/* Slider (16px hit area, thin rail, thumb on hover/focus)            */
+/* ------------------------------------------------------------------ */
+
+.mp-slider {
+  --mp-fill: 0%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 16px;
+}
+
+.mp-slider__input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mp-slider__input::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: var(--r-pill);
+  background:
+    linear-gradient(to right, var(--mp-slider-fill) var(--mp-fill), var(--surface-3) var(--mp-fill));
+}
+
+.mp-slider--accent {
+  --mp-slider-fill: var(--accent);
+}
+
+.mp-slider--white {
+  --mp-slider-fill: var(--text-1);
+}
+
+.mp-slider:hover .mp-slider__input::-webkit-slider-runnable-track {
+  height: 6px;
+}
+
+.mp-slider__input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--text-1);
+  opacity: 0;
+  transition:
+    opacity var(--d-fast) var(--ease-out),
+    transform var(--d-fast) var(--ease-out);
+}
+
+.mp-slider:hover .mp-slider__input::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  margin-top: -4px;
+  opacity: 1;
+}
+
+.mp-slider__input:focus-visible::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  margin-top: -4px;
+  opacity: 1;
+}
+
+.mp-slider__input::-moz-range-track {
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+}
+
+.mp-slider__input::-moz-range-progress {
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--mp-slider-fill);
+}
+
+.mp-slider:hover .mp-slider__input::-moz-range-track,
+.mp-slider:hover .mp-slider__input::-moz-range-progress {
+  height: 6px;
+}
+
+.mp-slider__input::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--text-1);
+  opacity: 0;
+}
+
+.mp-slider:hover .mp-slider__input::-moz-range-thumb,
+.mp-slider__input:focus-visible::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Pill (36px)                                                        */
+/* ------------------------------------------------------------------ */
+
+.mp-pill {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0 var(--s-4);
+  border: 0;
+  border-radius: var(--r-pill);
+  background-color: transparent;
+  color: var(--text-2);
+  font: var(--t-body-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform var(--d-fast) var(--ease-out),
+    background-color var(--d-fast) var(--ease-out),
+    color var(--d-fast) var(--ease-out);
+}
+
+.mp-pill:hover {
+  color: var(--text-1);
+  transform: none;
+}
+
+.mp-pill:active {
+  transform: scale(0.96);
+}
+
+.mp-pill--active {
+  background-color: transparent;
+  color: var(--accent);
+}
+
+.mp-pill__icon {
+  display: inline-flex;
+}
+
+.mp-pill__label {
+  line-height: 20px;
+}
+
+/* ------------------------------------------------------------------ */
+/* 2.2 Sidebar icon rail (76px, 240px open)                            */
+/* ------------------------------------------------------------------ */
+
+.mp-sidebar {
+  width: var(--sidebar-w);
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--s-1);
+  min-width: 0;
+  padding: var(--s-3) var(--s-2);
+  background: transparent;
+  border: 0;
+  transition: width var(--d-base) var(--ease-out);
+}
+
+.mp-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: var(--s-1);
+}
+
+.mp-sidebar__item {
+  min-height: 64px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  padding: var(--s-2);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: color-mix(in srgb, var(--text-1) 75%, transparent);
+  cursor: pointer;
+  transition:
+    background-color var(--d-fast) var(--ease-out),
+    color var(--d-fast) var(--ease-out);
+}
+
+.mp-sidebar__item:hover {
+  background-color: var(--surface-2);
+  color: var(--text-1);
+}
+
+.mp-sidebar__item--active {
+  background-color: var(--surface-2);
+  color: var(--text-1);
+}
+
+.mp-sidebar__caption {
+  font-family: var(--font-stack);
+  font-size: 10px;
+  line-height: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ */
+/* 2.3 Top bar (72px)                                                 */
+/* ------------------------------------------------------------------ */
+
+.mp-topbar {
+  position: relative;
+  height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: var(--s-5);
+  min-width: 0;
+  padding: 0 var(--s-5);
+  background: transparent;
+}
+
+.mp-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  flex: none;
+  min-width: 0;
+}
+
+.mp-wordmark {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: var(--t-title-2);
+  color: var(--text-1);
+  white-space: nowrap;
+}
+
+.mp-wordmark__dot {
+  order: -1;
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+}
+
+/* Center search is a flex child (never absolutely positioned), so it can
+   shrink between the wordmark and the right cluster instead of overlapping
+   either. margin: auto centers it in leftover space like the old design. */
+.mp-search {
+  flex: 1 1 auto;
+  min-width: 120px;
+  max-width: 720px;
+  width: auto;
+  margin: 0 auto;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 0 var(--s-1) 0 var(--s-4);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border);
+  background-color: var(--surface-2);
+  -webkit-backdrop-filter: var(--glass);
+  backdrop-filter: var(--glass);
+  transition: background-color var(--d-fast) var(--ease-out);
+}
+
+.mp-search:focus-within {
+  background-color: var(--surface-3);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 0;
+}
+
+.mp-search__icon {
+  flex: none;
+  color: var(--text-3);
+}
+
+.mp-search__input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text-1);
+  font: var(--t-body);
+  outline: none;
+}
+
+.mp-search__input::placeholder {
+  color: var(--text-3);
+}
+
+.mp-search__input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.mp-topbar__right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: var(--s-3);
+  flex: none;
+  min-width: 0;
+}
+
+.mp-key-field {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-pill);
+  background-color: transparent;
+  color: var(--text-3);
+}
+
+.mp-key-field__caption {
+  font: var(--t-caption);
+  white-space: nowrap;
+}
+
+.mp-key-field__input {
+  width: 120px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text-1);
+  font: var(--t-body-sm);
+  outline: none;
+}
+
+.mp-key-field__input::placeholder {
+  color: var(--text-3);
+}
+
+/* Cast ghost button + avatar circle (right side of the top bar). */
+.mp-avatar {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--r-pill);
+  background-color: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition:
+    transform var(--d-fast) var(--ease-out),
+    background-color var(--d-fast) var(--ease-out),
+    color var(--d-fast) var(--ease-out);
+}
+
+.mp-avatar:hover {
+  background-color: transparent;
+  color: var(--text-1);
+  transform: none;
+}
+
+.mp-avatar:active {
+  transform: scale(0.96);
+}
+
+.mp-avatar:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/* §9 Player bar (76px + 3px progress hairline on its top edge)       */
+/* ------------------------------------------------------------------ */
+
+.mp-player {
+  position: relative;
+  height: calc(var(--player-h) + 3px);
+  padding-top: 3px;
+  /* Chromeless: controls float directly on the animated background. */
+  background: transparent;
+  border-top: none;
+  box-shadow: none;
+}
+
+.mp-seek {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 16px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+}
+
+.mp-seek .mp-slider {
+  position: relative;
+  z-index: 1;
+}
+
+.mp-seek__buffer {
+  --mp-buffered: 0%;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 3px;
+  width: var(--mp-buffered);
+  transform: translateY(-50%);
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  pointer-events: none;
+}
+
+.mp-player__grid {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-5);
+  min-width: 0;
+  padding: 0 var(--s-7);
+}
+
+/* 3px hairline for the seek rail; volume keeps the 4px rail. */
+.mp-seek .mp-slider__input::-webkit-slider-runnable-track {
+  height: 3px;
+}
+
+.mp-seek .mp-slider:hover .mp-slider__input::-webkit-slider-runnable-track {
+  height: 6px;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.mp-seek .mp-slider__input::-moz-range-track,
+.mp-seek .mp-slider__input::-moz-range-progress {
+  height: 3px;
+}
+
+.mp-seek .mp-slider:hover .mp-slider__input::-moz-range-track,
+.mp-seek .mp-slider:hover .mp-slider__input::-moz-range-progress {
+  height: 6px;
+}
+
+/* Like / dislike: bare icon buttons floating on the background. */
+.mp-like-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 36px;
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-pill);
+  background-color: transparent;
+  color: var(--text-2);
+  font: var(--t-body-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.mp-like-pill__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-width: 40px;
+  min-height: 36px;
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    transform var(--d-fast) var(--ease-out),
+    color var(--d-fast) var(--ease-out);
+}
+
+.mp-like-pill__btn:hover {
+  color: var(--text-1);
+  transform: scale(1.06);
+}
+
+.mp-like-pill__btn:active {
+  transform: scale(0.96);
+}
+
+.mp-like-pill__btn:focus-visible,
+.mp-like-pill:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.mp-like-pill__btn--active {
+  color: var(--text-1);
+}
+
+.mp-like-pill__divider {
+  display: none;
+}
+
+.mp-player__left {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: var(--s-4);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mp-player__thumb {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.mp-player__thumb-fallback {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-sm);
+  background-color: var(--surface-2);
+  color: var(--text-3);
+}
+
+.mp-player__meta {
+  min-width: 0;
+}
+
+.mp-player__title {
+  font: var(--t-body-lg);
+  color: var(--text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-player__subtitle {
+  font: var(--t-body-sm);
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-player__center {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  flex: none;
+  gap: var(--s-5);
+  min-width: 0;
+}
+
+/* Transport toggles read accent when engaged (white circular play stays). */
+.mp-player__center .mp-icon-btn--active {
+  color: var(--accent);
+  background-color: var(--surface-2);
+}
+
+.mp-repeat-wrap {
+  display: inline-flex;
+  flex: none;
+}
+
+/* Overflow menu: frosted dropdown floating above the kebab. */
+.mp-menu-wrap {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+
+.mp-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--s-2));
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 220px;
+  padding: var(--s-2);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background-color: rgba(20, 20, 22, 0.85);
+  -webkit-backdrop-filter: var(--glass-strong);
+  backdrop-filter: var(--glass-strong);
+  box-shadow: var(--shadow-art);
+}
+
+.mp-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 40px;
+  padding: 0 var(--s-3);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-1);
+  font: var(--t-body-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--d-fast) var(--ease-out);
+}
+
+.mp-menu__item:hover {
+  background-color: var(--surface-2);
+}
+
+.mp-menu__item:disabled {
+  opacity: 0.4;
+}
+
+.mp-menu__item:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.mp-play-btn {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--text-1);
+  color: var(--bg);
+  cursor: pointer;
+  transition: transform var(--d-fast) var(--ease-out);
+}
+
+.mp-play-btn:hover {
+  transform: scale(1.06);
+}
+
+.mp-play-btn:active {
+  transform: scale(0.96);
+}
+
+.mp-player__right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: var(--s-4);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mp-time {
+  font: var(--t-body-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.mp-volume {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  flex: none;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.mp-volume__slider {
+  width: 120px;
+  min-width: 0;
+  display: flex;
+}
+
+/* ------------------------------------------------------------------ */
+/* 2.6 Responsive rules                                               */
+/* ------------------------------------------------------------------ */
+
+/* 1280–1599: tighter chrome gutters */
+@media (max-width: 1599px) {
+  .mp-player__grid {
+    padding-left: var(--s-5);
+    padding-right: var(--s-5);
+  }
+
+  .mp-search {
+    max-width: 640px;
+  }
+}
+
+/* 1100–1279: rail always collapsed, wordmark hidden, compact gutters */
+@media (max-width: 1279px) {
+  .mp-shell--nav-open {
+    --sidebar-w: 76px;
+  }
+
+  .mp-wordmark {
+    display: none;
+  }
+
+  .mp-topbar {
+    padding: 0 var(--s-4);
+    gap: var(--s-4);
+  }
+
+  .mp-search {
+    max-width: 560px;
+    min-width: 100px;
+  }
+  .mp-key-field__input {
+    width: 88px;
+  }
+
+  .mp-key-field__caption {
+    display: none;
+  }
+
+  .mp-sidebar--open {
+    position: fixed;
+    top: 0;
+    bottom: var(--player-h);
+    left: 0;
+    z-index: 50;
+    width: 240px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(32px) saturate(150%);
+    -webkit-backdrop-filter: blur(32px) saturate(150%);
+    border-right: 1px solid var(--border);
+  }
+}
+
+/* <1100: rail collapses away; menu opens it as an overlay instead. */
+@media (max-width: 1099px) {
+  .mp-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mp-shell__sidebar {
+    display: none;
+  }
+
+  .mp-shell--nav-open .mp-shell__sidebar {
+    display: block;
+    position: fixed;
+    top: var(--topbar-h);
+    bottom: var(--player-h);
+    left: 0;
+    z-index: 50;
+    width: 240px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(32px) saturate(150%);
+    -webkit-backdrop-filter: blur(32px) saturate(150%);
+    border-right: 1px solid var(--border);
+  }
+
+  .mp-shell--nav-open .mp-shell__sidebar .mp-sidebar {
+    width: 240px;
+  }
+
+  .mp-shell__topbar,
+  .mp-shell__main {
+    grid-column: 1;
+  }
+
+  .mp-search {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0 auto;
+  }
+
+  .mp-topbar {
+    flex-wrap: nowrap;
+  }
+
+  .mp-key-field {
+    display: none;
+  }
+
+  .mp-volume__slider {
+    display: none;
+  }
+
+  .mp-player__grid {
+    gap: var(--s-4);
+  }
+
+  .mp-time {
+    display: none;
+  }
+}
+
+/* <900: single-screen stacks — panel becomes a full-width section
+   below the stage with a sticky tab row (see App.css). */
+@media (max-width: 899px) {
+  .mp-player__grid {
+    gap: var(--s-3);
+    padding-left: var(--s-4);
+    padding-right: var(--s-4);
+  }
+
+  .mp-like-pill__count {
+    display: none;
+  }
+
+  .mp-player__center {
+    gap: var(--s-3);
+  }
+}

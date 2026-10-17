@@ -1,0 +1,229 @@
+/* LyricsScreen shell — desktop port. Token scope lives here (not in
+   src/styles/, per workstream rules): same values as E:/mush tokens.css with
+   system font stacks only (no fontsource/font deps; orchestrator wires fonts
+   later). Toolbar folds the PanelTabs lyrics-row pattern: sync badge +
+   Source select + pills, right-aligned and wrapping on narrow panels. */
+
+.lyrics-screen {
+  --font-stack: -apple-system, "Segoe UI", "Noto Sans JP", system-ui, sans-serif;
+  --font-lyric: "SF Pro Display", -apple-system, "BlinkMacSystemFont", "Segoe UI", "Noto Sans JP", system-ui, sans-serif;
+  --bg: #0a0a0c;
+  --surface-1: rgba(255, 255, 255, 0.07);
+  --surface-2: rgba(255, 255, 255, 0.09);
+  --surface-3: rgba(255, 255, 255, 0.12);
+  --border: rgba(255, 255, 255, 0.14);
+  --text-1: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.55);
+  --text-3: rgba(255, 255, 255, 0.4);
+  --accent: #ff4d5e;
+  --accent-contrast: #ffffff;
+  --focus-ring: var(--accent);
+  --r-pill: 999px;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --d-fast: 150ms;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: var(--font-stack);
+}
+
+.lyrics-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: none;
+  min-width: 0;
+  padding: 12px 24px 0;
+}
+
+.lyrics-toolbar .pill {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.lyrics-track {
+  margin: 0;
+  padding: 8px 24px 0;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lyrics-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lyrics-body .lv-container {
+  flex: 1;
+}
+
+/* Sync badge: word-synced dot lights accent; otherwise flat gray. */
+.sync-badge {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sync-badge__dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: var(--r-pill);
+  background: var(--text-3);
+}
+
+.sync-badge.is-word {
+  color: var(--text-1);
+}
+
+.sync-badge.is-word .sync-badge__dot {
+  background: var(--accent);
+}
+
+/* Provider switcher: native select, dark-styled to sit with the pills. */
+.provider-field {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 6px 0 12px;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.provider-field__caption {
+  flex: none;
+}
+
+.provider-select {
+  flex: none;
+  min-height: 28px;
+  max-width: 128px;
+  border: 0;
+  padding: 0 4px;
+  background: transparent;
+  color: var(--text-1);
+  font: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
+.provider-select option {
+  background-color: #141416;
+  color: #f5f5f7;
+}
+
+.provider-field:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Pills + empty state (PanelTabs pattern, chromeless on background). */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--d-fast) var(--ease-out),
+    color var(--d-fast) var(--ease-out),
+    transform var(--d-fast) var(--ease-out);
+}
+
+.pill:hover {
+  color: var(--text-1);
+}
+
+.pill:active {
+  transform: scale(0.96);
+}
+
+.pill:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.pill.is-active {
+  background: transparent;
+  color: var(--text-1);
+}
+
+.pill.is-locked {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.lyrics-empty {
+  margin: 0;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.lyrics-empty__title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+.lyrics-empty__hint {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pill {
+    transition: none;
+  }
+}

@@ -1,0 +1,345 @@
+/* Player screen — dark style, Poppins + SF Pro stacks. Co-located with PlayerScreen.tsx. */
+
+.at-player {
+  position: relative;
+  min-height: 100%;
+  color: #f5f5f7;
+  font-family: 'Poppins', -apple-system, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+  overflow: hidden;
+}
+
+.at-player__backdrop {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, #17171c 0%, #0a0a0c 70%);
+}
+
+.at-player__backdrop-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(48px) saturate(1.4);
+  opacity: 0.55;
+  transform: scale(1.1);
+}
+
+.at-player__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 10, 12, 0.55) 0%, rgba(10, 10, 12, 0.88) 100%);
+}
+
+/* Hidden playback stage: future hidden-IFrame engine mounts here (1px, inert). */
+.at-player__stage {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.at-player__body {
+  position: relative;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.at-player__art-frame {
+  display: flex;
+  justify-content: center;
+}
+
+.at-player__art {
+  width: min(320px, 72vw);
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+}
+
+.at-player__art--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+}
+
+.at-player__art-glyph {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.at-player__meta {
+  text-align: center;
+}
+
+.at-player__title {
+  font-size: 22px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.at-player__artist {
+  margin-top: 4px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.65);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.at-player__seek-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.at-player__time {
+  min-width: 44px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.65);
+  text-align: center;
+}
+
+.at-player__seek {
+  flex: 1;
+  accent-color: #e33d5a;
+  height: 24px;
+  cursor: pointer;
+}
+
+.at-player__seek:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.at-player__note {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+.at-player__transport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.at-tbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.at-tbtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.at-tbtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.at-tbtn--large {
+  width: 52px;
+  height: 52px;
+  font-size: 24px;
+}
+
+.at-tbtn.is-active {
+  color: #e33d5a;
+}
+
+.at-play-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border: 0;
+  border-radius: 50%;
+  background: #f5f5f7;
+  color: #0a0a0c;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.at-play-btn:hover:not(:disabled) {
+  background: #fff;
+}
+
+.at-play-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.at-player__volume {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.at-player__vol-slider {
+  width: 160px;
+  accent-color: #f5f5f7;
+  cursor: pointer;
+}
+
+.at-player__vol-val {
+  min-width: 28px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.at-queue-sheet {
+  margin-top: 8px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 16px;
+}
+
+.at-queue-sheet__title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.at-queue-sheet__empty {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.at-queue-sheet__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.at-queue-row__btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.at-queue-row__btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.at-queue-row.is-current .at-queue-row__btn {
+  background: rgba(227, 61, 90, 0.16);
+}
+
+.at-queue-row__thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.at-queue-row__thumb--fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 20px;
+}
+
+.at-queue-row__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.at-queue-row__title {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.at-queue-row__artist {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Now-playing equalizer bars. */
+.at-eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 16px;
+}
+
+.at-eq > span {
+  width: 3px;
+  background: #e33d5a;
+  animation: at-eq-bounce 0.9s ease-in-out infinite;
+}
+
+.at-eq > span:nth-child(1) { height: 60%; }
+.at-eq > span:nth-child(2) { height: 100%; animation-delay: 0.25s; }
+.at-eq > span:nth-child(3) { height: 40%; animation-delay: 0.5s; }
+
+.at-eq.is-paused > span {
+  animation-play-state: paused;
+  height: 4px;
+}
+
+@keyframes at-eq-bounce {
+  0%, 100% { transform: scaleY(0.5); }
+  50% { transform: scaleY(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .at-eq > span {
+    animation: none;
+  }
+}

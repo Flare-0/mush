@@ -1,0 +1,398 @@
+/* LyricsView — YouLy+ look: left-aligned bold lines, active pure white with
+   a two-layer per-word wipe (dim base + clip-path-revealed bright overlay),
+   near lines dim flat gray, far lines recede darker with a whisper of blur
+   (never more than ~1px, so everything stays readable). */
+
+.lv-container {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  padding: 48px 32px 32px 32px;
+  overflow-y: auto;
+  overflow-anchor: none;
+  min-height: 0;
+  text-align: left;
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-3, rgba(255, 255, 255, 0.14)) transparent;
+  /* Prominent feather: content dissolves into the background over a deep
+     140px band top + bottom instead of a hard 96px cut. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 140px, #000 calc(100% - 140px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 140px, #000 calc(100% - 140px), transparent 100%);
+}
+
+.lv-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lv-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lv-container::-webkit-scrollbar-thumb {
+  background: var(--surface-3, rgba(255, 255, 255, 0.14));
+  border-radius: 999px;
+}
+
+/* One lyric group: original + romaji + translation. Inactive lines sit
+   clearly below the active line in opacity (no competing blur wall);
+   distance tiers below darken further with only a whisper of blur. Opacity
+   + transform only here, so line switches stay on the compositor. */
+.lv-group {
+  cursor: pointer;
+  outline: none;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 96px;
+  color: var(--text-1, #ffffff);
+  letter-spacing: 0;
+  word-break: keep-all;
+  line-break: strict;
+  opacity: 0.42;
+  filter: blur(0);
+  /* Whole-line breath: inactive lines rest a whisper smaller; the active
+     line settles at full size. Deliberately barely noticeable. */
+  transform: scale(0.99);
+  transform-origin: left center;
+  transition:
+    opacity 450ms var(--ease-out, cubic-bezier(0.2, 0.8, 0.2, 1)),
+    transform 700ms var(--ease-out, cubic-bezier(0.2, 0.8, 0.2, 1));
+}
+
+.lv-group.is-past {
+  opacity: 0.26;
+}
+
+.lv-group.is-far {
+  filter: blur(0.4px);
+}
+
+.lv-group.is-next {
+  opacity: 0.45;
+}
+
+/* Distance tiers: adjacent lines stay flat and legible, far lines recede
+   darker with a whisper blur ramp (max ~1px — readability first).
+   Past (dN) and upcoming (bN) classes complement is-past/is-next/is-far. */
+.lv-group.is-d1 {
+  opacity: 0.38;
+  filter: blur(0);
+}
+
+.lv-group.is-d2 {
+  opacity: 0.3;
+  filter: blur(0.4px);
+}
+
+.lv-group.is-d3 {
+  opacity: 0.24;
+  filter: blur(0.8px);
+}
+
+.lv-group.is-d4 {
+  opacity: 0.18;
+  filter: blur(1px);
+}
+
+.lv-group.is-b1 {
+  opacity: 0.42;
+  filter: blur(0);
+}
+
+.lv-group.is-b2 {
+  opacity: 0.34;
+  filter: blur(0.4px);
+}
+
+.lv-group.is-b3 {
+  opacity: 0.28;
+  filter: blur(0.8px);
+}
+
+.lv-group.is-b4 {
+  opacity: 0.2;
+  filter: blur(1px);
+}
+
+.lv-group:hover {
+  opacity: 0.8;
+  filter: blur(0);
+}
+
+.lv-group.is-active {
+  opacity: 1;
+  transform: scale(1);
+  will-change: opacity;
+}
+
+.lv-group:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--accent, #fa2d48));
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.lv-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35em;
+  font-family: var(--font-lyric);
+  font-size: 32px;
+  line-height: 42px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variation-settings: "opsz" 32;
+  text-wrap: pretty;
+}
+
+.lv-word-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Two-layer karaoke word (ArchiveTune-style): a static dim base plus an
+   absolutely-positioned bright overlay revealed by an animated GRADIENT
+   MASK (soft 32px edge, like their fillTransitionWidth). The mask applies
+   to the element's composited output — including transformed letter
+   children — so unlike background-clip:text it can't mispaint into a blob. */
+
+/* WAAPI-animatable wipe position (0 = unsung, 1 = fully sung). Registered
+   so the --p animation interpolates smoothly off the main thread. */
+@property --p {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+.lv-word {
+  position: relative;
+  display: inline-block;
+  color: var(--text-3, rgba(245, 245, 247, 0.5));
+}
+
+/* Emphasis ripple target: each letter swells and settles in turn while
+   its word is sung (WAAPI timeline, compositor-driven). */
+.lv-word-base .lv-letter,
+.lv-word-lit .lv-letter {
+  display: inline-block;
+}
+
+/* Bright overlay: hidden by default, revealed left-to-right by the WAAPI
+   --p mask while its word is live. 32px soft edge centered on the progress
+   point (fully hidden at 0, fully shown at 1). */
+.lv-word-lit {
+  position: absolute;
+  inset: 0;
+  --p: 0;
+  color: var(--text-1, #f5f5f7);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    #000 calc(var(--p) * (100% + 32px) - 32px),
+    transparent calc(var(--p) * (100% + 32px))
+  );
+  mask-image: linear-gradient(
+    to right,
+    #000 calc(var(--p) * (100% + 32px) - 32px),
+    transparent calc(var(--p) * (100% + 32px))
+  );
+  pointer-events: none;
+}
+
+/* Currently-sung word: no transform pop on the word itself — the overlay
+   wipe + letter ripple carry it. */
+.lv-word.is-sung {
+  transform: none;
+}
+
+/* Settled words: static, no animations, no paint cost at rest. */
+.lv-word.is-past-word {
+  color: var(--text-1, #f5f5f7);
+}
+
+.lv-word.is-past-word .lv-word-lit,
+.lv-word.is-future-word .lv-word-lit {
+  display: none;
+}
+
+/* Instrumental gap row (`• • •`). Height animates 0 <-> ~1.8em; the rAF loop
+   owns is-open/is-active/is-leaving classes via DOM so React never re-renders. */
+.lv-gap {
+  display: flex;
+  align-items: center;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  font-size: 28px;
+  line-height: 1;
+  content-visibility: visible;
+  transition:
+    height 450ms ease,
+    opacity 300ms ease;
+}
+
+.lv-gap.is-open {
+  height: 1.8em;
+  opacity: 1;
+}
+
+/* Manual scroll: gaps snap open with no animation. */
+.lv-container.user-scrolling .lv-gap {
+  transition: none;
+}
+
+.lv-gap-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  transform-origin: left center;
+}
+
+/* Hide choreography: scale up at 35%, then collapse (close lands 850ms later). */
+.lv-gap.is-leaving .lv-gap-inner {
+  animation: lv-gap-ended 800ms ease;
+}
+
+.lv-gap-dot {
+  position: relative;
+  flex: none;
+  width: 0.4em;
+  height: 0.4em;
+  overflow: hidden;
+  border-radius: 50%;
+  background-color: var(--text-3, rgba(245, 245, 247, 0.5));
+  color: transparent;
+}
+
+/* Lit overlay: only opacity is ever mutated (compositor-only). */
+.lv-gap-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: var(--text-1, #f5f5f7);
+  opacity: 0;
+}
+
+/* Breathing loop while the gap is active, staggered per dot. */
+.lv-gap.is-active .lv-gap-dot {
+  animation: lv-gap-breathe 4s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.lv-gap.is-active .lv-gap-dot:nth-child(2) {
+  animation-delay: 0.45s;
+}
+
+.lv-gap.is-active .lv-gap-dot:nth-child(3) {
+  animation-delay: 0.9s;
+}
+
+@keyframes lv-gap-breathe {
+  from {
+    transform: scale(1.1);
+  }
+  to {
+    transform: scale(0.9);
+  }
+}
+
+@keyframes lv-gap-ended {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(0);
+  }
+}
+
+.lv-roman {
+  margin-top: 4px;
+  font-family: var(--font-stack);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-2, rgba(245, 245, 247, 0.7));
+  opacity: 0.85;
+}
+
+.lv-translation {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-1, #f5f5f7);
+  opacity: 0.85;
+}
+
+/* Empty / loading state: three shimmer lines. */
+.lv-skeleton {
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(
+    100deg,
+    var(--surface-2, rgba(255, 255, 255, 0.08)) 40%,
+    var(--surface-3, rgba(255, 255, 255, 0.14)) 50%,
+    var(--surface-2, rgba(255, 255, 255, 0.08)) 60%
+  );
+  background-size: 200% 100%;
+  animation: lv-shimmer 1.6s linear infinite;
+}
+
+.lv-skeleton:nth-child(2) {
+  width: 72%;
+}
+
+.lv-skeleton:nth-child(3) {
+  width: 84%;
+}
+
+@keyframes lv-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lv-group {
+    transition: opacity 300ms ease-out;
+    transform: none;
+    filter: none;
+  }
+
+  .lv-group.is-active,
+  .lv-group.is-d1,
+  .lv-group.is-d2,
+  .lv-group.is-d3,
+  .lv-group.is-d4,
+  .lv-group.is-b1,
+  .lv-group.is-b2,
+  .lv-group.is-b3,
+  .lv-group.is-b4 {
+    transform: none;
+    filter: none;
+  }
+
+  .lv-word {
+    transition: none;
+  }
+
+  .lv-word.is-sung {
+    transform: none;
+  }
+
+  .lv-skeleton {
+    animation: none;
+  }
+
+  /* Gaps go fully static: instant open, no breathing, no hide choreography. */
+  .lv-gap {
+    transition: none;
+  }
+
+  .lv-gap.is-active .lv-gap-dot,
+  .lv-gap.is-leaving .lv-gap-inner {
+    animation: none;
+  }
+}

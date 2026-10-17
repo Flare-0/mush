@@ -1,0 +1,6 @@
+/* Global styles live in styles/tokens.css (DESIGN.md tokens, imported first)
+   and styles/base.css (reset, fonts, scrollbars, focus, reduced motion).
+   This file is kept only as the existing import anchor in main.tsx — every
+   rule it once held (box-sizing, page height, body font/background/color,
+   form font inheritance) is now covered by base.css. Add nothing here
+   unless it is a page-level override that belongs to neither file. */

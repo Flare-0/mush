@@ -1,0 +1,124 @@
+/* DESIGN.md §4, §11 — global reset, fonts, scrollbars, focus, reduced motion.
+   Consumers: tokens come from ./tokens.css (imported first in main.tsx). */
+
+/* Poppins (UI voice, ArchiveTune's app font) + Inter Tight Variable
+   (SF Pro Display stand-in off Apple hardware) + Noto Sans JP 500/700. */
+@import "@fontsource/poppins/400.css";
+@import "@fontsource/poppins/500.css";
+@import "@fontsource/poppins/600.css";
+@import "@fontsource-variable/inter-tight";
+@import "@fontsource/noto-sans-jp/500.css";
+@import "@fontsource/noto-sans-jp/700.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-stack);
+  background: var(--bg);
+  color: var(--text-1);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv11", "ss01";
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* All clock/duration text uses tabular numerals (§4). */
+time,
+.tnum,
+[data-tnum] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Japanese text keeps word boundaries (§4). */
+:lang(ja) {
+  letter-spacing: 0;
+  word-break: keep-all;
+  line-break: strict;
+}
+
+/* Thin scrollbars everywhere (§8.1, §11): 6px, transparent track,
+   --surface-3 thumb that appears on hover. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+*:hover {
+  scrollbar-color: var(--surface-3) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+}
+
+/* Visible keyboard focus on every interactive element (§11). */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Disabled state baseline. */
+:disabled {
+  cursor: not-allowed;
+}
+
+/* Reduced motion: kill transforms/blur transitions and looping animation;
+   AmbientBackground additionally renders a single static frame (§7, §12). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,260 @@
+:root {
+  --at-bg: #0a0a0c;
+  --at-surface: #16161a;
+  --at-surface-2: #1e1e24;
+  --at-text: #f4f2fa;
+  --at-muted: #a8a3b8;
+  --at-accent: #d0bcff;
+  --at-border: rgba(255, 255, 255, 0.08);
+  --at-radius: 16px;
+  --at-font: 'Poppins', 'SF Pro Display', 'SF Pro Text', -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.at-library {
+  font-family: var(--at-font);
+  background: var(--at-bg);
+  color: var(--at-text);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.at-library__title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.at-library__sub {
+  margin: 4px 0 0;
+  color: var(--at-muted);
+  font-size: 14px;
+}
+
+.at-library__tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.at-library__tab {
+  background: var(--at-surface);
+  color: var(--at-muted);
+  border: 1px solid var(--at-border);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.at-library__tab--active {
+  background: var(--at-accent);
+  border-color: transparent;
+  color: #1a1330;
+}
+
+.at-empty {
+  margin: 0;
+  padding: 16px;
+  border: 1px dashed var(--at-border);
+  border-radius: var(--at-radius);
+  color: var(--at-muted);
+  font-size: 14px;
+  background: var(--at-surface);
+}
+
+.at-lib__list {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.at-lib__list--nested {
+  margin-top: 12px;
+}
+
+.at-lib__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--at-surface);
+  border: 1px solid var(--at-border);
+  border-radius: var(--at-radius);
+  padding: 8px 12px 8px 8px;
+}
+
+.at-lib__thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--at-surface-2);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.at-lib__thumb--fallback {
+  color: var(--at-muted);
+  font-size: 20px;
+}
+
+.at-lib__thumb--round {
+  border-radius: 50%;
+}
+
+.at-lib__meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.at-lib__name,
+.at-lib__sub {
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.at-lib__name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.at-lib__sub {
+  font-size: 12px;
+  color: var(--at-muted);
+}
+
+.at-lib__actions {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+.at-lib__playlists {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.at-lib__create,
+.at-lib__add {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.at-lib__add {
+  margin-top: 12px;
+}
+
+.at-lib__input {
+  flex: 1;
+  min-width: 0;
+  background: var(--at-surface);
+  color: var(--at-text);
+  border: 1px solid var(--at-border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 14px;
+}
+
+.at-lib__card {
+  background: var(--at-surface);
+  border: 1px solid var(--at-border);
+  border-radius: var(--at-radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.at-lib__card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.at-lib__card-title {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  color: var(--at-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.at-lib__count {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--at-muted);
+}
+
+.at-lib__card-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.at-lib__rename {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.at-lib__hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--at-muted);
+}
+
+.at-btn {
+  background: var(--at-accent);
+  color: #1a1330;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.at-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.at-btn--ghost {
+  background: transparent;
+  color: var(--at-text);
+  border: 1px solid var(--at-border);
+}
+
+.at-btn--danger {
+  color: #ff8a9b;
+}
+
+.at-btn .is-liked,
+.at-btn.is-liked {
+  color: #ff8a9b;
+  border-color: #ff8a9b;
+}

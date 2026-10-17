@@ -1,0 +1,32 @@
+/* Global reset — must be the first stylesheet imported in main.tsx.
+   Chromeless desktop shell: no body margin, no scrollbars, dark canvas. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+html,
+body {
+  background: #0a0a0c;
+  overflow: hidden;
+}
+
+body {
+  color: #fff;
+  color-scheme: dark;
+  font-family: 'Poppins', 'SF Pro Display', 'SF Pro Text', -apple-system, 'Segoe UI', Roboto,
+    system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}

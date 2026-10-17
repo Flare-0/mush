@@ -1,0 +1,153 @@
+/* Stage (art + panel) — consumes tokens.css vars only. Chrome lives in shell.css. */
+
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(500px, 560px);
+  gap: var(--s-8);
+  padding: 0 var(--s-7) var(--s-6) var(--s-7);
+  height: 100%;
+  min-height: 0;
+}
+
+.stage-error {
+  margin: 0 var(--s-7) var(--s-3) var(--s-7);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  font: var(--t-body-sm);
+  color: var(--text-1);
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  gap: var(--s-5);
+}
+
+.art-frame {
+  position: relative;
+  width: min(100%, 440px, calc(100dvh - var(--topbar-h) - var(--player-h) - 160px));
+}
+
+.art {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--r-art);
+  box-shadow: var(--shadow-art), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  display: block;
+}
+
+.art--empty {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: var(--r-art);
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--text-3);
+  font: var(--t-body-sm);
+}
+
+/* Frosted overlay actions, top-right of the art (lyrics + expand). */
+.art-actions {
+  position: absolute;
+  top: var(--s-3);
+  right: var(--s-3);
+  display: flex;
+  gap: var(--s-2);
+}
+
+.art-expand {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: var(--glass);
+  -webkit-backdrop-filter: var(--glass);
+  color: var(--text-1);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity var(--d-fast) var(--ease-out), transform var(--d-fast) var(--ease-out);
+}
+
+.art-frame:hover .art-expand,
+.art-expand:focus-visible {
+  opacity: 1;
+}
+
+.art-expand:hover {
+  transform: scale(1.06);
+}
+
+.panel-note {
+  font: var(--t-body);
+  color: var(--text-2);
+  margin: 0;
+  padding: var(--s-5) 0;
+}
+
+/* Focus mode: same two-column stage, roomier lyric column. */
+.stage--focus {
+  grid-template-columns: minmax(0, 1fr) minmax(500px, 640px);
+}
+
+@media (max-width: 1599px) {
+  .stage {
+    grid-template-columns: minmax(0, 1fr) minmax(440px, 520px);
+    gap: var(--s-7);
+  }
+}
+
+@media (max-width: 1279px) {
+  .stage {
+    grid-template-columns: minmax(0, 1fr) minmax(380px, 480px);
+    gap: var(--s-6);
+    padding: 0 var(--s-6) var(--s-6) var(--s-6);
+  }
+
+  .art-frame {
+    width: min(100%, 360px);
+  }
+}
+
+/* <900: stack — art on top, panel becomes a full-width section below
+   with a sticky tab row; the main column scrolls. */
+@media (max-width: 899px) {
+  .mp-shell__main {
+    overflow-y: auto;
+  }
+
+  .stage {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+    gap: var(--s-5);
+  }
+
+  .art-frame {
+    width: min(100%, 440px);
+    margin: 0 auto;
+  }
+
+  .panel {
+    min-height: 60dvh;
+  }
+
+  .panel-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: color-mix(in srgb, var(--bg) 72%, transparent);
+    -webkit-backdrop-filter: var(--glass);
+    backdrop-filter: var(--glass);
+  }
+}
