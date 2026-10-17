@@ -44,6 +44,9 @@ node E:\mush\scratch\spike\resolve-stream.mjs dQw4w9WgXcQ
 # exit 0 = STREAM VERIFIED; the script prints only redacted URL info
 ```
 
+Bundle path defaults to the `E:\mush` clone; override with a 3rd CLI arg or `R3_BUNDLE=<path>`
+when the repo is mapped elsewhere (e.g. inside the Windows Sandbox).
+
 ## Verdict: **GO**
 
 The exact ArchiveTune engine runs on desktop Node. Remaining R-3 scope (not yet written):

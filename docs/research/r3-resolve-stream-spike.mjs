@@ -10,7 +10,11 @@ import { randomBytes } from 'node:crypto';
 import { createHash } from 'node:crypto';
 import { randomUUID } from 'node:crypto';
 
-const BUNDLE = 'E:\\mush\\scratch\\morideobfuscator\\src\\main\\assets\\youtubei\\youtubei.bundle.js';
+// Override with the 3rd CLI arg or R3_BUNDLE when the repo is mapped elsewhere.
+const BUNDLE =
+  process.argv[3] ||
+  process.env.R3_BUNDLE ||
+  'E:\\mush\\scratch\\morideobfuscator\\src\\main\\assets\\youtubei\\youtubei.bundle.js';
 const MEDIA_ID = process.argv[2] || 'dQw4w9WgXcQ';
 const nodeFetch = globalThis.fetch.bind(globalThis);
 
