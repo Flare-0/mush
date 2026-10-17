@@ -158,7 +158,7 @@ function setupMediaKeys() {
       // ignore
     }
     try {
-      globalShortcut.register('MediaPreviousTrack', () => sendTransportKey('previous'));
+      globalShortcut.register('MediaPreviousTrack', () => sendTransportKey('prev'));
     } catch {
       // ignore
     }

@@ -1,32 +1,44 @@
 // ArchiveTune Desktop — persistent namespaced JSON store (main process).
 //
-// Persistence lives under `app.getPath('userData')` (see HOOKS.md for wiring).
+// Persistence lives under `app.getPath('userData')`. The IPC wiring (channel
+// names, payload shapes, 'store:changed' pushes) is documented inline on
+// `registerStoreIPC` at the bottom of this file; there is no separate doc.
 // Zero dependencies: node:fs + node:path only. Writes are atomic (tmp file +
 // rename in the same directory) with a debounced flush, so rapid `set()`
-// bursts hit disk once. Every block that touches disk is guarded so a
+// bursts hit disk once. A failed disk write keeps the store dirty and is
+// retried (with a backoff) until it lands, so a transient failure never
+// silently drops data. Every block that touches disk is guarded so a
 // headless smoke run never crashes.
 //
 // Key model: `namespace` groups related keys (e.g. "settings", "session").
 // Backing JSON shape: `{ [namespace]: { [key]: value } }`.
 // Namespaces must not contain ':' or '.' (reserved as key separators).
 //
-// Accepted call forms (all equivalent):
+// Accepted call forms:
 //   store.get("settings", "theme", "dark")
 //   store.get("settings:theme", "dark")
 //   store.get("settings.theme", "dark")
 //   store.get("settings", "theme")        // no fallback -> undefined
 //   store.get("theme")                    // default namespace -> undefined
-// Same overloads apply to `set` and `subscribe`:
+// `set` takes either 3 args or a compound 2-arg key:
 //   store.set("settings", "theme", "dark")
 //   store.set("settings:theme", "dark")
-//   store.set("theme", "dark")            // default namespace
-// `set(ns, key, undefined)` deletes the key.
+//   store.set("settings", "theme", undefined)   // deletes the key
+// A non-compound 2-arg call (`set("ns", "key")`) is ambiguous with the legacy
+// default-namespace form (`set("key", value)`), so in dev
+// (NODE_ENV !== 'production') it throws; production keeps legacy behavior.
+// `subscribe` accepts subscribe(ns, key, fn), subscribe("ns:key", fn) and
+// subscribe("key", fn) (default namespace).
 import fs from 'node:fs';
 import path from 'node:path';
 
 export const STORE_FILENAME = 'archivetune-store.json';
 export const DEFAULT_NAMESPACE = 'default';
 const FLUSH_DEBOUNCE_MS = 150;
+// Backoff before retrying a flush whose disk write failed (bad path,
+// read-only volume, full disk). The dirty flag stays set until a write lands,
+// so a failed flush is retried instead of silently dropping data.
+const FLUSH_RETRY_MS = 5000;
 // Separator for in-memory listener keys. Keys may contain any visible char,
 // so use a control char that never appears in real keys. Built with
 // fromCharCode to keep this file plain printable ASCII.
@@ -71,16 +83,37 @@ export function createStore(userDataPath) {
   let data = {};
   try {
     const raw = fs.readFileSync(filePath, 'utf8');
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      data = parsed;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        data = parsed;
+      } else {
+        const kind =
+          parsed === null
+            ? 'null'
+            : Array.isArray(parsed)
+              ? 'array'
+              : typeof parsed;
+        console.warn(
+          `[store] ${STORE_FILENAME} is not a JSON object (got ${kind}); starting with an empty store.`
+        );
+      }
+    } catch (err) {
+      console.warn(
+        `[store] ${STORE_FILENAME} contains invalid JSON (${(err && err.message) || err}); starting with an empty store.`
+      );
     }
-  } catch {
-    data = {};
+  } catch (err) {
+    if (err && err.code !== 'ENOENT') {
+      console.warn(
+        `[store] could not read ${STORE_FILENAME} (${(err && err.code) || (err && err.message) || err}); starting with an empty store.`
+      );
+    }
   }
 
   const listeners = new Map(); // listenerKey -> Set<fn>
   let flushTimer = null;
+  let retryPending = false; // pending flushTimer is a post-failure retry
   let flushInFlight = false;
   let needsFlush = false;
 
@@ -121,16 +154,32 @@ export function createStore(userDataPath) {
     }
   }
 
-  function scheduleFlush() {
+  // Schedule a flush. `retry` is true when called after a failed disk write:
+  // the delay is backed off, and a later normal schedule (new data) can
+  // upgrade the pending retry back to the normal debounce.
+  function scheduleFlush(retry) {
     needsFlush = true;
-    if (flushTimer || flushInFlight) return;
+    if (flushInFlight) return; // The in-flight flush reschedules in its finally.
+    if (flushTimer) {
+      if (retry || !retryPending) return;
+      try {
+        clearTimeout(flushTimer);
+      } catch {
+        // ignore
+      }
+      flushTimer = null;
+    }
+    const delay = retry ? FLUSH_RETRY_MS : FLUSH_DEBOUNCE_MS;
     try {
+      retryPending = !!retry;
       flushTimer = setTimeout(() => {
         flushTimer = null;
+        retryPending = false;
         void flush();
-      }, FLUSH_DEBOUNCE_MS);
+      }, delay);
       if (typeof flushTimer.unref === 'function') flushTimer.unref();
     } catch {
+      retryPending = false;
       // Timers unavailable — fall back to a best-effort sync flush.
       flushSync();
     }
@@ -139,7 +188,10 @@ export function createStore(userDataPath) {
   function serialize() {
     try {
       return JSON.stringify(data);
-    } catch {
+    } catch (err) {
+      console.warn(
+        `[store] state is not JSON-serializable (${(err && err.message) || err}); skipping write.`
+      );
       return null;
     }
   }
@@ -153,26 +205,42 @@ export function createStore(userDataPath) {
       }
       flushTimer = null;
     }
+    retryPending = false;
     if (flushInFlight) {
       needsFlush = true;
       return false;
     }
     needsFlush = false;
     const payload = serialize();
-    if (payload === null) return false;
+    if (payload === null) {
+      // Unserializable state (see serialize): stay dirty so a later flush
+      // retries instead of silently losing the write.
+      needsFlush = true;
+      scheduleFlush(true);
+      return false;
+    }
     flushInFlight = true;
+    let failed = false;
     try {
       await fs.promises.mkdir(dir, { recursive: true });
       const tmp = `${filePath}.tmp`;
       await fs.promises.writeFile(tmp, payload, 'utf8');
       await fs.promises.rename(tmp, filePath);
       return true;
-    } catch {
+    } catch (err) {
+      // Disk write failed: keep the store dirty so the data is retried (on
+      // the backoff schedule and on the next set/remove) instead of being
+      // silently lost.
+      needsFlush = true;
+      failed = true;
+      console.warn(
+        `[store] flush failed (${(err && err.code) || (err && err.message) || err}); will retry.`
+      );
       return false;
     } finally {
       flushInFlight = false;
       if (needsFlush) {
-        scheduleFlush();
+        scheduleFlush(failed);
       }
     }
   }
@@ -186,16 +254,27 @@ export function createStore(userDataPath) {
       }
       flushTimer = null;
     }
+    retryPending = false;
     needsFlush = false;
     const payload = serialize();
-    if (payload === null) return false;
+    if (payload === null) {
+      needsFlush = true;
+      return false;
+    }
     try {
       fs.mkdirSync(dir, { recursive: true });
       const tmp = `${filePath}.tmp`;
       fs.writeFileSync(tmp, payload, 'utf8');
       fs.renameSync(tmp, filePath);
       return true;
-    } catch {
+    } catch (err) {
+      // Keep the store dirty so the next flush opportunity retries. Do not
+      // schedule from here: this can run as the no-timers fallback, where
+      // scheduling would recurse back into flushSync.
+      needsFlush = true;
+      console.warn(
+        `[store] flushSync failed (${(err && err.code) || (err && err.message) || err}); will retry on the next flush.`
+      );
       return false;
     }
   }
@@ -214,17 +293,36 @@ export function createStore(userDataPath) {
     return read(String(a), String(b), c);
   }
 
-  // set: 3 args -> (ns, key, value); 2 args -> (compound-or-plain key, value).
+  // set: unambiguous forms are the 3-arg `(ns, key, value)` call and the
+  // compound 2-arg form `("ns:key", value)` / `("ns.key", value)`. The
+  // 3-arg form is detected by arity, so `set(ns, key, undefined)` deletes the
+  // key (see remove) instead of colliding with the 2-arg overload.
+  //
+  // Footgun guard: a non-compound 2-arg call `set("ns", "key")` cannot be
+  // told apart from the legacy default-namespace form `set("key", value)` —
+  // it would silently write `default/ns = "key"`. In dev (NODE_ENV !==
+  // 'production') throw loudly; production keeps the legacy behavior. The
+  // store is unwired today, so callers should always use the explicit forms.
   function set(a, b, c) {
     let ns;
     let key;
     let value;
-    if (c !== undefined) {
+    if (arguments.length >= 3) {
       ns = String(a);
       key = String(b);
       value = c;
     } else {
-      [ns, key] = splitStoreKey(String(a));
+      const compound = String(a);
+      if (!isCompoundKey(compound) && process.env.NODE_ENV !== 'production') {
+        throw new TypeError(
+          `store.set(${JSON.stringify(compound)}, ...) is ambiguous: a non-compound 2-arg call ` +
+            `falls into the legacy default-namespace overload. Use the 3-arg form ` +
+            `store.set(namespace, key, value), or a compound key like ` +
+            `store.set(${JSON.stringify(compound + ':key')}, value). ` +
+            `(The non-compound 2-arg form is only allowed when NODE_ENV=production.)`
+        );
+      }
+      [ns, key] = splitStoreKey(compound);
       value = b;
     }
     if (value === undefined) {
@@ -356,9 +454,12 @@ export function createStore(userDataPath) {
   };
 }
 
-// Normalize an IPC payload into [namespace, key]. Accepts:
+// Normalize an IPC payload into the [namespace, key] pair the 3-arg store
+// calls take. Accepts:
 //   { namespace, key }  |  { key: "ns:key" }  |  { namespace: "ns:key" }  |
 //   "ns:key"  |  "key"
+// Anything else is malformed: warn with the offending shape (never throw into
+// the IPC handler) and fall back to the default namespace.
 function payloadToKey(payload) {
   try {
     if (typeof payload === 'string') return splitStoreKey(payload);
@@ -374,9 +475,16 @@ function payloadToKey(payload) {
         return splitStoreKey(payload.namespace);
       }
     }
-  } catch {
-    // fall through
+  } catch (err) {
+    console.warn(
+      `[store] malformed IPC payload (${(err && err.message) || err}); using the default namespace.`
+    );
+    return [DEFAULT_NAMESPACE, ''];
   }
+  console.warn(
+    '[store] malformed IPC payload: expected "ns:key", { namespace, key } or { key: "ns:key" }; using the default namespace. Got:',
+    payload
+  );
   return [DEFAULT_NAMESPACE, ''];
 }
 

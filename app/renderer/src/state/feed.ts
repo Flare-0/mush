@@ -285,10 +285,13 @@ export function useYouTubeSearch(initialQuery = '', debounceMs = 400): YouTubeSe
   const [hasSource, setHasSource] = useState<boolean>(() => getSearchSource() !== 'none');
   const [attempt, setAttempt] = useState(0);
   const timer = useRef<number | null>(null);
+  /** Monotonic request token: only the latest effect run may commit results. */
+  const seqRef = useRef(0);
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
   useEffect(() => {
+    const seq = ++seqRef.current;
     const source = getSearchSource();
     setHasSource(source !== 'none');
     if (source === 'none') {
@@ -313,12 +316,18 @@ export function useYouTubeSearch(initialQuery = '', debounceMs = 400): YouTubeSe
           ? searchViaBridge(q)
           : searchYouTubeFeed(getYouTubeApiKey() ?? '', q);
       run
-        .then((videos) => setResults(videos))
-        .catch((e: unknown) => {
-          setResults([]);
-          setError(e instanceof Error ? e.message : 'YouTube search failed');
+        .then((videos) => {
+          if (seq === seqRef.current) setResults(videos);
         })
-        .finally(() => setLoading(false));
+        .catch((e: unknown) => {
+          if (seq === seqRef.current) {
+            setResults([]);
+            setError(e instanceof Error ? e.message : 'YouTube search failed');
+          }
+        })
+        .finally(() => {
+          if (seq === seqRef.current) setLoading(false);
+        });
     }, Math.max(debounceMs, 0));
     return () => {
       if (timer.current !== null) window.clearTimeout(timer.current);

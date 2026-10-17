@@ -10,7 +10,7 @@ contextBridge.exposeInMainWorld('archivetune', {
     electron: process.versions.electron,
   },
   // Subscribe to transport/media-key actions from main.
-  // Actions: 'play' | 'pause' | 'toggle' | 'next' | 'previous'.
+  // Actions: 'play' | 'pause' | 'toggle' | 'next' | 'prev'.
   // Returns an unsubscribe function.
   onTransportKey: (cb) => {
     const listener = (_event, action) => {

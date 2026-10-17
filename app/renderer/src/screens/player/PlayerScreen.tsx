@@ -15,13 +15,15 @@ function repeatLabel(repeat: PlayerStore['repeat']): string {
 }
 
 /**
- * Player screen: backdrop art, title/artist, seek rail, transport row
+ * Player view: backdrop art, title/artist, seek rail, transport row
  * (shuffle / prev / play / next / repeat-one), volume, Up-Next queue sheet.
  * Dark style, Poppins + SF Pro stacks. Honest empty states throughout.
+ *
+ * Pure view — the store is required and owned by the caller, so mounting this
+ * never constructs a second player store (audit C3).
  */
-export default function PlayerScreen({ store }: PlayerScreenProps) {
-  const fallback = usePlayerStore();
-  const s = store ?? fallback;
+export function PlayerScreenView({ store }: { store: PlayerStore }) {
+  const s = store;
   const current = s.current;
   const hasTrack = current !== null;
   const durationKnown = s.duration > 0;
@@ -226,4 +228,20 @@ export default function PlayerScreen({ store }: PlayerScreenProps) {
       </div>
     </section>
   );
+}
+
+/** Host that owns a store only for direct mounts with no injected store. */
+function PlayerScreenWithFallback() {
+  const store = usePlayerStore();
+  return <PlayerScreenView store={store} />;
+}
+
+/**
+ * Thin wrapper. App always passes `session.store` (the single shared store),
+ * so on the normal path this never calls `usePlayerStore()` and the fallback
+ * host below is never mounted.
+ */
+export default function PlayerScreen({ store }: PlayerScreenProps) {
+  if (store) return <PlayerScreenView store={store} />;
+  return <PlayerScreenWithFallback />;
 }
