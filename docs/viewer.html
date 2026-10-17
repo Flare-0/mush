@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ArchiveTune Desktop — project docs</title>
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --background: #0b0d10; --foreground: #e8eaed; --muted-foreground: #9aa0a6;
+    --card: #14171b; --card-foreground: #e8eaed; --secondary: #1e2227;
+    --secondary-foreground: #e8eaed; --border: #2a2f36;
+    --accent: #ff6b9d; --accent-surface: #3a1f2c; --accent-surface-foreground: #ffd9e6;
+    --destructive: #ff6b6b; --success: #7ddc8f;
+    --code-background: #101317; --code-foreground: #cdd3da;
+    --font-sans: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'Cascadia Code', 'Consolas', 'SF Mono', Menlo, monospace;
+    --radius: 10px;
+  }
+  body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-sans); font-size: 14px; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 14px 18px 30px; }
+  .head { display: flex; align-items: baseline; gap: 10px; padding: 2px 0 10px; }
+  .head h1 { font-size: 15px; margin: 0; font-weight: 600; }
+  .head .sub { color: var(--muted-foreground); font-size: 12px; }
+  .tabs { display: flex; gap: 6px; align-items: center; padding: 0 0 12px; flex-wrap: wrap; position: sticky; top: 0; background: var(--background); z-index: 5; padding-top: 4px; }
+  .tab { border: 1px solid var(--border); background: var(--card); color: var(--card-foreground); padding: 6px 13px; border-radius: 999px; cursor: pointer; font-size: 12.5px; font-family: var(--font-mono); }
+  .tab:hover { background: var(--secondary); }
+  .tab.active { background: var(--accent-surface); color: var(--accent-surface-foreground); border-color: var(--accent); }
+  .spacer { flex: 1; }
+  .status { color: var(--muted-foreground); font-size: 11.5px; font-family: var(--font-mono); white-space: nowrap; }
+  .refresh { border: 1px solid var(--border); background: transparent; color: var(--muted-foreground); border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 12.5px; }
+  .refresh:hover { color: var(--foreground); background: var(--secondary); }
+  .doc { border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 26px; min-height: 400px; }
+  .err { color: var(--destructive); border: 1px solid var(--destructive); border-radius: var(--radius); padding: 14px 16px; margin: 0 0 12px; font-family: var(--font-mono); font-size: 12.5px; white-space: pre-wrap; }
+  .md h1 { font-size: 23px; margin: 4px 0 14px; }
+  .md h2 { font-size: 17.5px; margin: 28px 0 10px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .md h3 { font-size: 15px; margin: 22px 0 8px; color: var(--accent); }
+  .md h4 { font-size: 13.5px; margin: 16px 0 6px; }
+  .md p, .md li { line-height: 1.6; }
+  .md ul, .md ol { padding-left: 22px; }
+  .md code { background: var(--code-background); color: var(--code-foreground); padding: 1px 5px; border-radius: 4px; font-family: var(--font-mono); font-size: 12px; }
+  .md pre { background: var(--code-background); color: var(--code-foreground); padding: 12px 14px; border-radius: var(--radius); overflow-x: auto; }
+  .md pre code { background: none; padding: 0; }
+  .md table { display: block; overflow-x: auto; border-collapse: collapse; max-width: 100%; width: max-content; margin: 10px 0; font-size: 12.5px; }
+  .md th, .md td { border: 1px solid var(--border); padding: 5px 10px; text-align: left; vertical-align: top; }
+  .md th { background: var(--secondary); color: var(--secondary-foreground); white-space: nowrap; }
+  .md tr:nth-child(even) td { background: #171a1f; }
+  .md blockquote { margin: 10px 0; padding: 2px 14px; border-left: 3px solid var(--accent); color: var(--muted-foreground); }
+  .md a { color: var(--accent); }
+  .md hr { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
+  .md img { max-width: 100%; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <h1>ArchiveTune Desktop — project docs</h1>
+    <span class="sub">live from disk · E:\mush</span>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab" data-id="roadmap">ROADMAP.md</button>
+    <button class="tab" data-id="features">archivetune-features.md</button>
+    <button class="tab" data-id="audit">code-audit.md</button>
+    <span class="spacer"></span>
+    <span class="status" id="status">loading…</span>
+    <button class="refresh" id="refresh" title="Re-fetch from disk">refresh</button>
+  </div>
+  <div id="err"></div>
+  <div class="doc md" id="doc"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script>
+const DOCS = {
+  roadmap:  { label: 'ROADMAP.md',                     path: '/ROADMAP.md' },
+  features: { label: 'docs/archivetune-features.md',   path: '/docs/archivetune-features.md' },
+  audit:    { label: 'docs/code-audit.md',             path: '/docs/code-audit.md' },
+};
+const cache = {};
+let current = 'roadmap';
+const $doc = document.getElementById('doc');
+const $err = document.getElementById('err');
+const $status = document.getElementById('status');
+
+function esc(s) { const d = document.createElement('span'); d.textContent = s; return d.innerHTML; }
+
+async function load(id, force) {
+  const meta = DOCS[id];
+  $status.textContent = 'fetching ' + meta.label + '…';
+  $err.innerHTML = '';
+  try {
+    if (force) delete cache[id];
+    if (!cache[id]) {
+      const res = await fetch(meta.path, { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + res.statusText);
+      const text = await res.text();
+      if (!text.trim()) throw new Error('empty file');
+      const rendered = (typeof marked !== 'undefined')
+        ? marked.parse(text)
+        : '<pre>' + esc(text) + '</pre>';
+      cache[id] = { text, rendered };
+    }
+    if (current === id) $doc.innerHTML = cache[id].rendered;
+    const kb = (cache[id].text.length / 1024).toFixed(1);
+    $status.textContent = meta.label + ' · ' + kb + ' KB · ' + new Date().toLocaleTimeString();
+  } catch (e) {
+    if (current === id) $doc.innerHTML = '';
+    $err.innerHTML = '<div class="err">Could not load ' + esc(meta.label) + ': ' + esc(e.message) +
+      '\n\nHint: the docs server must be running (E:\\mush\\docs\\serve-docs.mjs on 127.0.0.1:4599).</div>';
+    $status.textContent = 'error';
+  }
+}
+
+function select(id) {
+  current = id;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.id === id));
+  if (cache[id]) $doc.innerHTML = cache[id].rendered; else $doc.innerHTML = '';
+  load(id, false);
+}
+
+document.getElementById('tabs').addEventListener('click', ev => {
+  const t = ev.target.closest('.tab');
+  if (t) select(t.dataset.id);
+});
+document.getElementById('refresh').addEventListener('click', () => load(current, true));
+select('roadmap');
+</script>
+</body>
+</html>
